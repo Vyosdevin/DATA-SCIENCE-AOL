@@ -1,0 +1,205 @@
+---
+title: "Project EDA"
+author: "Haziq Ibrahim Omar"
+date: '2022-06-07'
+output: html_document
+---
+
+```{r}
+library(readr)
+library(dlookr)
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+library(MASS)
+library(scales)
+library(ggpubr)
+library(stringr)
+```
+
+```{r}
+url <- ("https://www.kaggle.com/datasets/tmdb/tmdb-movie-metadata")
+
+film <- read.csv("movies.csv", stringsAsFactors = FALSE)
+```
+
+```{r}
+head(film)
+```
+
+```{r}
+filmnew <- subset(film, select = -c(homepage, id, keywords, overview,spoken_languages, tagline))
+head(filmnew)
+```
+
+
+```{r}
+sapply(filmnew, class)
+```
+
+```{r}
+str(filmnew)
+```
+
+
+```{r}
+summary(filmnew)
+plot_correlate(filmnew)
+```
+
+```{r}
+colSums(is.na(filmnew))
+```
+
+```{r}
+tail(filmnew)
+```
+
+```{r}
+filmclear <- na.omit(filmnew)
+cat("Before\n")
+NROW(filmnew)
+cat("After\n")
+NROW(filmclear)
+```
+
+```{r}
+filmclear[,c("original_language", "status")] <- lapply(filmclear[,c("original_language", "status")], as.factor)
+str(filmclear)
+
+```
+
+```{r}
+mostfilm1<- head(filmclear[order(filmclear$revenue, decreasing = TRUE), c("title", "revenue","budget")], n = 10)
+mostfilm1
+
+mostfilm <- head(filmclear[order(filmclear$revenue, decreasing = TRUE), c("title", "revenue","budget")], n = 10)
+mostfilm
+
+mostfilm2 <- head(filmclear[order(filmclear$budget, decreasing = TRUE), c("title", "budget")], n = 10)
+mostfilm2
+
+mostfilm3 <- head(filmclear[order(filmclear$popularity, decreasing = TRUE), c("title", "popularity")], n = 10)
+mostfilm3
+
+mostfilm4 <- head(filmclear[order(filmclear$runtime, decreasing = TRUE), c("title", "runtime")], n = 10)
+mostfilm4
+```
+
+```{r}
+mostfilm$title <- reorder(mostfilm$title, as.numeric(mostfilm$revenue))
+mostfilm$revenue <- paste(format(round(mostfilm$revenue / 1e9, 2), trim = TRUE), "B")
+ggplot(mostfilm, aes(title, revenue)) +
+  geom_col(position = "dodge") +
+  coord_flip() +
+  labs(x = "Movie Name", y = "Revenues in USD", title = "Top 10 Movie with Most Revenues")
+```
+
+```{r}
+mostfilm2$title <- reorder(mostfilm2$title,as.numeric(mostfilm2$budget))
+mostfilm2$budget <- paste(format(round(mostfilm2$budget / 1e9, 2), trim = TRUE), "B")
+
+ggplot(mostfilm2, aes(title, budget)) +
+  geom_col(position = "dodge") +
+  coord_flip() +
+  labs(x = "Movie Name", y = "Budget in USD", title = "Top 10 biggest budget")
+```
+
+```{r}
+mostfilm3$title <- reorder(mostfilm3$title,mostfilm3$popularity)
+
+ggplot(mostfilm3, aes(title, popularity)) +
+  geom_col(position = "dodge") +
+  coord_flip() +
+  labs(x = "Movie Name", y = "Popularity", title = "Top 10 Movie with most popularity")
+```
+
+```{r}
+mostfilm4$title <- reorder(mostfilm4$title,mostfilm4$runtime)
+
+ggplot(mostfilm4, aes(title, runtime)) +
+  geom_col(position = "dodge") +
+  coord_flip() +
+  labs(x = "Movie Name", y = "Run time hours.minute", title = "Top 10 with longest runtime")
+```
+
+```{r}
+summary(mostfilm$budget)
+sd(mostfilm$budget)
+hist(mostfilm$budget)
+boxplot(mostfilm$budget,xlab="Revenue",main="")
+
+```
+
+```{r}
+summary(filmclear$vote_average)
+sd(filmclear$vote_average)
+hist(filmclear$vote_average)
+boxplot(filmclear$vote_average,xlab="vote average",main="")
+```
+
+```{r}
+summary(filmclear$popularity)
+sd(filmclear$popularity)
+hist(filmclear$popularity)
+boxplot(filmclear$popularity,xlab="popularity",main="")
+```
+
+```{r}
+tapply(filmclear$vote_average,filmclear$runtime,summary)
+head(mostfilm)
+summary(mostfilm)
+```
+
+```{r}
+a <- filmclear$revenue
+qqnorm(a,xlab = 'num',ylab='revenue')
+qqline(a,col = 'red')
+```
+
+```{r}
+b <- filmclear$vote_average
+qqnorm(b,xlab = 'num',ylab='vote_average')
+qqline(b,col = 'blue')
+```
+
+```{r}
+c <- filmclear$popularity
+qqnorm(c,xlab = 'num',ylab='popularity')
+qqline(c,col = 'yellow')
+```
+
+```{r}
+ggscatter(
+          data = mostfilm,
+          x="title",
+          y="revenue",
+          xlab = "Title",
+          ylab = "revenue",
+          add = "reg.line"
+)
+```
+
+```{r}
+str(mostfilm1)
+plot(mostfilm1$revenue,mostfilm1$budget)
+cor(mostfilm1$revenue,mostfilm1$budget)
+r<-lm(mostfilm1$revenue~mostfilm1$budget)
+abline(r)
+summary(r)
+names(r)
+r$fitted
+fitted(r)
+plot(mostfilm1$budget,r$fitted)
+coefficients(r)
+coefficients(r)[1]
+coefficients(r)[2]
+
+predict(r,list(budget=c(2342870,3450037)), interval = "prediction", level=0.9)
+new = data.frame(budget=4042870)
+predict(r,new)
+1048237879  + (2.508998 ) *2508998
+1048237879  + (2.508998 ) *10508998
+1048237879  + (2.508998 ) *405089980
+```
+
